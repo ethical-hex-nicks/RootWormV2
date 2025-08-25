@@ -23,50 +23,35 @@ from aiogram.fsm.context import FSMContext
 from lib.states import DirectoryState, current_directory
 from config import ALLOWED_USER_ID
 import os
+from lib.text.texts import TEXTS, user_languages
 
 
 def register_cd(dp):
-    @dp.message(F.text == "Переместиться по директории [ Просмотр папок ]")
+    @dp.message((F.text == "Переместиться по директории") | (F.text == "change directory"))
     @dp.message(Command("change_directory"))
     async def change_directory(message: types.Message, state: FSMContext):
-        await message.answer("Введите путь к директории для просмотра файлов (или 'exit' для выхода):")
+        user_id = message.from_user.id
+        lang = user_languages.get(user_id, 'en')
+
+        await message.answer(TEXTS[lang]['enter_new_directory'])
         await state.set_state(DirectoryState.waiting_for_directory)
 
     @dp.message(DirectoryState.waiting_for_directory)
     async def set_new_directory(message: types.Message, state: FSMContext):
-        if message.from_user.id != ALLOWED_USER_ID:
-            await message.answer("К сожалению, у вас нет доступа к этому боту.")
-            return
+        user_id = message.from_user.id
+        lang = user_languages.get(user_id, 'en')
 
-        user_input = message.text.strip()
+        if user_id == ALLOWED_USER_ID:
+            global current_directory
+            new_directory = message.text
 
-        if user_input.lower() == "exit":
-            await message.answer("Выход из режима перемещения по директориям.")
+            if os.path.isdir(new_directory):
+                current_directory = new_directory
+                await message.answer(f"{TEXTS[lang]['directory_changed']}:\n{current_directory}")
+            else:
+                await message.answer(TEXTS[lang]['invalid_directory'])
+
             await state.clear()
-            return
-
-        global current_directory
-        new_directory = user_input
-
-        if os.path.isdir(new_directory):
-            current_directory = new_directory
-            await message.answer(f"Перемещено root. Текущая директория:\n{current_directory}")
-
-            try:
-                folders = [
-                    name for name in os.listdir(current_directory)
-                    if os.path.isdir(os.path.join(current_directory, name))
-                ]
-                if folders:
-                    folder_list = "\n".join(folders)
-                    await message.answer(f"Папки в текущей директории:\n{folder_list}")
-                else:
-                    await message.answer("В этой директории нет папок.")
-            except Exception as e:
-                await message.answer(f"Ошибка при получении списка папок:\n{e}")
         else:
-            await message.answer("Неверный путь. Попробуйте снова root.")
-
-        await message.answer("Введите путь к следующей директории (или 'exit' для выхода):")
-
+            await message.answer(TEXTS[lang]['access_denied'])
     tasks = {}

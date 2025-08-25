@@ -16,7 +16,7 @@ pip install -r requirements.txt
     Line 23: `API_TOKEN`
 
     Line 24: `USER_ID`
-
+ 
     - Make sure to set your variables in minify_script.py
 
     ![Step 2: change variables](image/manify.png)

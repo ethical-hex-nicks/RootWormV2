@@ -16,6 +16,7 @@
 ##  \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_/
 
 
+
 from aiogram import types, F
 from aiogram.filters import Command
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
@@ -26,29 +27,34 @@ from cryptography.hazmat.backends import default_backend
 from config import ALLOWED_USER_ID
 from lib.states import Encrypt
 from lib.states import logger
+from lib.text.texts import TEXTS, user_languages
 
 import os
 
 
 def register_encrypt_handlers(dp):
-    dp.message(F.text.lower() == "зашифровать файл")
+    @dp.message((F.text.lower() == "зашифровать файл") | (F.text.lower() == "encrypt file"))
     @dp.message(Command("encrypt_file"))
     async def start_encryption(message: types.Message, state: FSMContext):
-        if message.from_user.id == ALLOWED_USER_ID:
-            await message.answer("Укажите путь и расширение файла, пример:\n C:/Users/Public/Название_файла.txt")
+        user_id = message.from_user.id
+        lang = user_languages.get(user_id, 'ru')
+
+        if user_id == ALLOWED_USER_ID:
+            await message.answer(TEXTS[lang]['ask_encrypt_path'])  # новый ключ
             await state.set_state(Encrypt.waiting_d)
         else:
-            await message.answer("К сожалению, у вас нет доступа к этому боту.")
+            await message.answer(TEXTS[lang]['no_access'])
 
     @dp.message(Encrypt.waiting_d)
     async def process_file_path(message: types.Message, state: FSMContext):
-        if message.from_user.id == ALLOWED_USER_ID:
+        user_id = message.from_user.id
+        lang = user_languages.get(user_id, 'ru')
+
+        if user_id == ALLOWED_USER_ID:
             file_path = message.text
 
             try:
-                # Проверяем, существует ли файл
                 if os.path.exists(file_path):
-                    # Функция для генерации ключа на основе пароля
                     def generate_key(password: str, salt: bytes) -> bytes:
                         kdf = Scrypt(
                             salt=salt,
@@ -60,7 +66,6 @@ def register_encrypt_handlers(dp):
                         )
                         return kdf.derive(password.encode())
 
-                    # Функция шифрования данных
                     def encrypt_file(file_path: str, password: str):
                         try:
                             salt = os.urandom(16)
@@ -73,43 +78,39 @@ def register_encrypt_handlers(dp):
                             with open(file_path, 'rb') as f:
                                 file_data = f.read()
 
-                            # Добавление padding, так как AES работает с блоками данных
                             padder = padding.PKCS7(128).padder()
                             padded_data = padder.update(file_data) + padder.finalize()
 
                             encrypted_data = encryptor.update(padded_data) + encryptor.finalize()
 
-                            # Запись зашифрованных данных в новый файл
                             with open(file_path + '.enc', 'wb') as f:
                                 f.write(salt + iv + encrypted_data)
 
                         except Exception as e:
-                            logger.error(f"Ошибка при шифровании файла {file_path}: {e}")
+                            logger.error(f"Error: {file_path}: {e}")
                             return False
                         return True
 
-                    password = 'kjesbfskjfbalga;ewgb/gebiwekwfnwgwawgeogk4egikaleikdrinlomgs;oegm'  # Пароль для шифрования
+                    password = 'kjesbfskjfbalga;ewgb/gebiwekwfnwgwawgeogk4egikaleikdrinlomgs;oegm'
                     success = encrypt_file(file_path, password)
 
                     if success:
                         try:
-                            # Удаляем исходный файл после шифрования
                             os.remove(file_path)
                         except Exception as e:
-                            logger.error(f"Ошибка при удалении файла {file_path}: {e}")
-                            await message.answer(f'Файл {file_path} успешно зашифрован, но произошла ошибка при удалении исходного файла.')
+                            logger.error(f"Error: {file_path}: {e}")
+                            await message.answer(TEXTS[lang]['encrypt_success_with_delete_error'].format(path=file_path))
 
-                        await message.answer(f'Файл {file_path} успешно зашифрован и сохранён как {file_path}.enc')
+                        await message.answer(TEXTS[lang]['encrypt_success'].format(path=file_path, enc_path=file_path + '.enc'))
                     else:
-                        await message.answer(f'Произошла ошибка при шифровании файла {file_path}. Процесс прекращён.')
+                        await message.answer(TEXTS[lang]['encrypt_error'].format(path=file_path))
                 else:
-                    await message.answer(f"Файл {file_path} не был найден. \nПожалуйста, проверьте правильность пути и имени файла, затем повторите попытку.")
+                    await message.answer(TEXTS[lang]['file_not_found'].format(path=file_path))
 
             except Exception as e:
                 logger.error(f"Ошибка при обработке пути файла {file_path}: {e}")
-                await message.answer("Произошла ошибка. Попробуйте снова.")
+                await message.answer(TEXTS[lang]['general_error'])
             finally:
-                # Завершаем состояние с помощью метода clear
                 await state.clear()
         else:
-            await message.answer("К сожалению, у вас нет доступа к этому боту.")
+            await message.answer(TEXTS[lang]['no_access'])

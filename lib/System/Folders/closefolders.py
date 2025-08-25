@@ -16,20 +16,25 @@
 ##  \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_/
 
 
+
 from aiogram import types, F
 from aiogram.filters import Command
 from config import ALLOWED_USER_ID
 import pygetwindow as gw 
+from lib.text.texts import TEXTS, user_languages
 
 def register_minimize_all_windows_handlers(dp):
-    @dp.message(F.text.lower() == "свернуть все окна")
+    @dp.message((F.text.lower() == "свернуть все окна") | (F.text.lower() == "minimize all windows"))
     @dp.message(Command("minimize_all_windows"))
     async def minimize_all_windows(message: types.Message):
-        if message.from_user.id == ALLOWED_USER_ID:
+        user_id = message.from_user.id
+        lang = user_languages.get(user_id, 'ru')
+
+        if user_id == ALLOWED_USER_ID:
             windows = gw.getAllWindows()
             for window in windows:
                 if not window.isMinimized:
                     window.minimize()
-            await message.answer("Окна были успешно свёрнуты")
+            await message.answer(TEXTS[lang]['minimize_windows_success'])
         else:
-            await message.answer("К сожалению, у вас нет доступа к этому боту.")
+            await message.answer(TEXTS[lang]['no_access'])

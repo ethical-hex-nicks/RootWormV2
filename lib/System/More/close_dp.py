@@ -21,21 +21,25 @@ from aiogram import types, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from config import ALLOWED_USER_ID
+from lib.text.texts import TEXTS, user_languages
 
 import psutil
 
 def register_close_dp(dp):
-    @dp.message(F.text.lower() == "закрыть диспетчер задач")
+    @dp.message((F.text.lower() == "закрыть диспетчер задач") | (F.text.lower() == "close task manager"))
     @dp.message(Command("close_task_manager"))
     async def open_url(message: types.Message, state: FSMContext):
-        if message.from_user.id == ALLOWED_USER_ID:
+        user_id = message.from_user.id
+        lang = user_languages.get(user_id, 'en')
+
+        if user_id == ALLOWED_USER_ID:
+            # Проходим по всем процессам и ищем "Taskmgr.exe"
             for proc in psutil.process_iter(['pid', 'name']):
                 if proc.info['name'] == 'Taskmgr.exe':
                     psutil.Process(proc.info['pid']).terminate()
-                    await message.answer("Task Manager закрыт, root.")
+                    await message.answer(TEXTS[lang]['task_manager_closed'])
                     break
             else:
-                await message.answer("Диспетчер задач не запущен, root.")
-
+                await message.answer(TEXTS[lang]['task_manager_not_running'])
         else:
-            await message.answer("К сожалению, у вас нет доступа к этому боту.")
+            await message.answer(TEXTS[lang]['access_denied'])

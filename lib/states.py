@@ -72,6 +72,10 @@ class waitingfile(StatesGroup):
 class waitmas(StatesGroup):
     file_name_delet = State()
 
+class microfonetime(StatesGroup):
+    waiting_for_microtime = State()
+    waiting_for_retry = State()  
+
 class WebTime(StatesGroup):
     waiting_for_time = State()
 

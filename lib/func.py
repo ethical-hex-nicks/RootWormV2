@@ -22,7 +22,7 @@ import sys
 from pathlib import Path
 import subprocess
 import winreg
-
+ 
 def extract_file(resource_name, output_path):
     if not os.path.exists(output_path):
         current_dir = Path(__file__).resolve().parent

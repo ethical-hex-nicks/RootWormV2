@@ -17,33 +17,31 @@
 
 
 
-
-from config import API_TOKEN, ALLOWED_USER_ID, MAX_ATTEMPTS, MAX_MESSAGE_LENGTH, destination_folder, directory, file_ids
-import os
-import asyncio
 from config import bot, dp
+import os
+import logging
+import sys
+import asyncio
+from aiogram import F
 
 
 ########### COMMIT WHEN YOU WILL BUILD EXE ###########
 
-# ## Отключение вывода на экран
-# sys.stdout = open(os.devnull, 'w')  
-# sys.stderr = open(os.devnull, 'w')  
-# logging.basicConfig(level=logging.CRITICAL + 1)
-# logging.getLogger('aiogram').disabled = True
+## Отключение вывода на экран
+sys.stdout = open(os.devnull, 'w')  
+sys.stderr = open(os.devnull, 'w')  
+logging.basicConfig(level=logging.CRITICAL + 1)
+logging.getLogger('aiogram').disabled = True
 
-# ## Включаем логирование, чтобы не пропустить важные сообщения
-# logging.basicConfig(level=logging.INFO)
+## Включаем логирование, чтобы не пропустить важные сообщения
+logging.basicConfig(level=logging.INFO)
 
 ############################ START MENU COMMANDS ###########################
 
-from lib.start_menu import register_start_menu_handler
+from lib.text.texts import user_languages
+from lib.text.start_menu import *
 
-register_start_menu_handler(dp)
-
-#user_directories = {}
-
-#############################  CMD COMMAND  ##############################
+#############################  CMD COMMAND  ############################## 
 
 from lib.System.PC.cmd import register_cmd_comand
 
@@ -199,7 +197,7 @@ register_load_file(dp)
 
 from  lib.Access.Audio.recordmic_handlers import register_audio_handlers
 
-register_audio_handlers(dp)
+register_audio_handlers(dp) 
 
 #############################  CHECK COPIED  ##############################
 

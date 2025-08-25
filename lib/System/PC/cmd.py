@@ -22,40 +22,44 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from config import ALLOWED_USER_ID
 from lib.states import CommandShell
-
+from lib.text.texts import TEXTS, user_languages
 import subprocess
 
 
 def register_cmd_comand(dp):
-    @dp.message(F.text.lower() == "командная строка [new]")
+    @dp.message((F.text.lower() == "командная строка") | (F.text.lower() == "cmd"))
     @dp.message(Command("cmd"))
     async def start_cmd(message: types.Message, state: FSMContext):
+        user_id = message.from_user.id
+        lang = user_languages.get(user_id, 'en')
         if message.from_user.id == ALLOWED_USER_ID:
-            await message.answer("Командная строка активна. Введите команду:\n\nЧтобы выйти — напиши `exit`.")
+            await message.answer(TEXTS[lang]['cmd_in'])
             await state.set_state(CommandShell.waiting_command)
         else:
-            await message.answer("У вас нет доступа к этому боту.")
+            await message.answer(TEXTS[lang]['access_denied'])
 
     @dp.message(CommandShell.waiting_command)
     async def process_command(message: types.Message, state: FSMContext):
+        user_id = message.from_user.id
+        lang = user_languages.get(user_id, 'en')
         if message.from_user.id != ALLOWED_USER_ID:
-            await message.answer("У вас нет доступа к этому боту.")
+            await message.answer(TEXTS[lang]['access_denied'])
             return
 
         cmd = message.text.strip()
 
         if cmd.lower() in ["exit", "выход", "quit"]:
             await state.clear()
-            await message.answer("Вы вышли из режима командной строки.")
+            await message.answer(TEXTS[lang]['cmd_out'])
             return
 
         try:
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True, encoding='cp866', timeout=15)
-            output = result.stdout or result.stderr or "Команда выполнена, но вывода нет."
+            output = result.stdout or result.stderr or "Command executed with no output."
         except Exception as e:
-            output = f"Ошибка выполнения: {e}"
+            output = f"Error: {e}"
 
         if len(output) > 4000:
-            output = output[:4000] + "\n\nВывод обрезан..."
+            output = output[:4000] + "\n\nError: More than 4000..."
 
         await message.answer(f"Command:\n`{cmd}`\nResult:\n```\n{output}\n```", parse_mode="Markdown")

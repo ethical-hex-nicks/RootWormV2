@@ -24,11 +24,15 @@ from ctypes import POINTER, cast
 from comtypes import CLSCTX_ALL
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 from config import ALLOWED_USER_ID
+from lib.text.texts import TEXTS, user_languages
+
 
 def register_volume_100(dp):
-    @dp.message(F.text.lower() == "звук на 100%")
+    @dp.message((F.text.lower() == "звук на 100%") | (F.text.lower() == "volume 100%"))
     @dp.message(Command("set_volume_100"))
     async def open_url(message: types.Message, state: FSMContext):
+        user_id = message.from_user.id
+        lang = user_languages.get(user_id, 'ru')
         if message.from_user.id == ALLOWED_USER_ID:
 
             def set_volume_to_100():
@@ -36,10 +40,9 @@ def register_volume_100(dp):
                 interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
                 volume = cast(interface, POINTER(IAudioEndpointVolume))
 
-                # Установка громкости на 100% (1.0 означает 100%)
                 volume.SetMasterVolumeLevelScalar(1.0, None)
 
             set_volume_to_100()
-            await message.answer("Громкость была установлена на 100%")
+            await message.answer(TEXTS[lang]['volume_set_100'])
         else:
-            await message.answer("К сожалению, у вас нет доступа к этому боту.")
+            await message.answer(TEXTS[lang]['no_access'])
