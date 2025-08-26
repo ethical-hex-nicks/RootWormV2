@@ -19,7 +19,6 @@
  
 from PIL import Image
 
-import sys
 import os
 import time
 import threading
@@ -32,6 +31,12 @@ leu = "\033[38;5;124m"
 def wait_for_enter(stop_flag):
     input() 
     stop_flag.append(True)
+
+def get_icon_path(user_input):
+    if user_input and os.path.isfile(user_input):
+        return user_input
+    else:
+        return "None"
 
 def RootWorm3():
     stop_flag = []
@@ -179,24 +184,14 @@ def RootWorm3():
         if choice == "1":
             print(f"{let}Building with PyInstaller...{clear}")
             command = (
-                f"pyinstaller --onefile --noconsole "
+                f"py -{version} -m PyInstaller --onefile --noconsole "
                 f"--icon={paths} "
                 f"--name={exe} "
                 f"--add-data config.py;. "
-                f"--add-data \"{os.path.dirname(sys.executable)}\\Lib\\site-packages\\setuptools\\_distutils;setuptools/_distutils\" "
+                f"--collect-submodules setuptools._distutils "
                 f"--distpath Your(EXE) "
-                f"--hidden-import=setuptools._distutils "
-                f"--hidden-import=setuptools._distutils.errors "
-                f"--hidden-import=setuptools._distutils.spawn "
-                f"--hidden-import=setuptools._distutils.compilers "
-                f"--hidden-import=distutils "
-                f"--hidden-import=distutils.errors "
-                f"--hidden-import=distutils.spawn "
-                f"--hidden-import=distutils.compilers "
                 f"bot.py"
             )
-
-
 
         os.system(command)
 
@@ -216,6 +211,12 @@ def RootWorm3():
     """)   
     
     icon = input(f"{let}root@RootWormV2{clear}:{ler}~{clear}$ ")
+
+    print(f"""
+    {ler}>>{clear} Enter your Python version (like 3.11.0): 
+    """) 
+
+    version = input(f"{let}root@RootWormV2{clear}:{ler}~{clear}$ ")
 
     print(f"""
     {ler}>>{clear} Choose the compiler:
