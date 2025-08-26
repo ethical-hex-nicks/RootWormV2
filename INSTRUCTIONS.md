@@ -1,10 +1,14 @@
 # Project Setup & Execution Instructions
 
-This script is built with **Python 3.10.0**.
+This script is built with **Python 3.11**.
 
 1. Install Dependencies
 ```bash
 pip install -r requirements.txt
+```
+or 
+```bash
+py -your_version -m pip install -r requirements.txt
 ```
 
 2. Configure the Script
