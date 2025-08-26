@@ -192,7 +192,7 @@ def RootWorm3():
                 f"--distpath Your(EXE) "
                 f"bot.py"
             )
-
+ 
         os.system(command)
 
         print(f"{let}Done.{clear}")
