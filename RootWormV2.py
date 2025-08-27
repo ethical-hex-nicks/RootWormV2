@@ -144,20 +144,33 @@ def RootWorm3():
 
     def convert(path):
         try:
-            img = Image.open(path) 
-            paths = "icon.ico"
-            img.save("icon.ico", "ICO") 
-            return paths
+            if not os.path.exists(path):
+                raise FileNotFoundError(f"ERROR: file is missing {path}")
+
+            img = Image.open(path)
+            output_icon = "icon.ico"
+            img.save(output_icon, "ICO")
+            return output_icon
+
         except Exception as e:
-            print(f"{e}")
-            return None
+            print(f"{ler}ERROR: {e}{clear}")
+            
+            default_icon = os.path.join("lib", "text", "icon.ico")
+            
+            if os.path.exists(default_icon):
+                print("Use default icon.")
+                return default_icon
+            else:
+                print(f"{ler}ERROR: missing icon {default_icon}{clear}")
+                return None
 
     def build():
-        paths = convert(icon)  
-        if paths is None:
-            print(f"{ler}FAILD{clear}")
+        paths = convert(icon) 
+        if paths is None or not os.path.exists(paths):
+            print(f"{ler}FAILED — icon does not exist.")
             return
-        
+
+
         if not os.path.exists("Your(EXE)"):
             os.makedirs("Your(EXE)")
 
@@ -192,7 +205,7 @@ def RootWorm3():
                 f"--distpath Your(EXE) "
                 f"bot.py"
             )
- 
+  
         os.system(command)
 
         print(f"{let}Done.{clear}")
